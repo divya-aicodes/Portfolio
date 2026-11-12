@@ -8,3 +8,4 @@ instance/
 .vercel/
 coverage.xml
 .coverage
+.env*
