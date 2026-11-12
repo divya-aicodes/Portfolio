@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Divya Jain builds thoughtful AI systems and full-stack digital products.">
+  <meta name="theme-color" content="#f2efe6">
+  <title>Divya Jain — Developer & AI Systems Builder</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+  <div class="page-loader" aria-hidden="true"><span>DJ</span><i></i></div>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <div class="scroll-progress" aria-hidden="true"><span id="scroll-progress-bar"></span></div>
+  <nav class="section-rail" aria-label="Page sections">
+    <a href="#top" aria-label="Introduction"><span>00</span></a>
+    <a href="#work" aria-label="Selected work"><span>01</span></a>
+    <a href="#about" aria-label="How I build"><span>02</span></a>
+    <a href="#skills" aria-label="Technical skills"><span>03</span></a>
+    <a href="#python" aria-label="Python backend"><span>04</span></a>
+    <a href="#contact" aria-label="Contact"><span>06</span></a>
+  </nav>
+
+  <header class="site-header" data-header>
+    <a class="brand" href="#top" aria-label="Divya Jain, back to top">
+      <span class="brand-mark" aria-hidden="true">
+        <svg class="brand-monogram" viewBox="0 0 48 48" focusable="false">
+          <path class="logo-d" d="M8.5 7.5h10.25C28.2 7.5 34 13.7 34 24s-5.8 16.5-15.25 16.5H8.5v-33Z"/>
+          <path class="logo-j" d="M27.5 8h12v20.5c0 7.8-4.2 12-11 12-4.2 0-7.35-1.85-9.25-5.1"/>
+          <path class="logo-cut" d="M35.5 5.5h7v7h-7z"/>
+        </svg>
+      </span>
+      <span class="brand-copy"><strong>Divya Jain</strong><small>Portfolio / 2026</small></span>
+    </a>
+
+    <button class="menu-button" type="button" aria-expanded="false" aria-controls="site-nav">
+      <span></span><span></span><span></span><span class="sr-only">Open navigation</span>
+    </button>
+
+    <nav class="site-nav" id="site-nav" aria-label="Primary navigation">
+      <a href="#work">Work</a>
+      <a href="#about">About</a>
+      <a href="#skills">Skills</a>
+      <a href="#python">Python</a>
+      <a class="nav-contact" href="#contact">Let's talk <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+
+  <main id="main-content">
+    <section class="hero section-shell" id="top" aria-labelledby="hero-title">
+      <span class="hero-portfolio-word" aria-hidden="true">PORTFOLIO</span>
+      <div class="hero-copy reveal">
+        <span class="kinetic-label" aria-hidden="true">BUILD / EXPLAIN / SHIP</span>
+        <p class="eyebrow"><span></span>Hello, I'm {{ profile.first_name }}.</p>
+        <h1 id="hero-title">{{ profile.headline }}</h1>
+        <p class="hero-summary">{{ profile.summary }}</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#work">Explore my work <span aria-hidden="true">↓</span></a>
+          <a class="text-link" href="{{ profile.github_url }}" target="_blank" rel="noreferrer">GitHub {{ profile.github_handle }} <span aria-hidden="true">↗</span></a>
+        </div>
+        <dl class="hero-metrics" aria-label="Portfolio snapshot">
+          <div><dt data-count="{{ projects|length }}" data-pad="2">00</dt><dd>selected<br>projects</dd></div>
+          <div><dt data-count="2" data-pad="2">00</dt><dd>Python-led<br>projects</dd></div>
+          <div><dt>∞</dt><dd>curiosity<br>for what’s next</dd></div>
+        </dl>
+      </div>
+
+      <div class="hero-visual reveal" aria-label="Portrait and developer profile">
+        <canvas class="hypercube-canvas" id="hypercube-canvas" aria-hidden="true"></canvas>
+        <div class="portrait-geometry" aria-hidden="true"><i></i><i></i><i></i></div>
+        <div class="portrait-frame" data-tilt>
+          <span class="portrait-label">Based in India · Building for the world</span>
+          <img src="{{ url_for('static', filename='images/divya-hero-cutout.png') }}" width="1256" height="1256" alt="Portrait of Divya Jain">
+          <span class="portrait-stamp" aria-hidden="true">BUILD<br>LEARN<br>SHIP</span>
+        </div>
+        <div class="code-note" aria-label="Current focus">
+          <p><span>01</span> CURRENT FOCUS</p>
+          <code id="focus-rotator">python · ai systems · product craft</code>
+        </div>
+      </div>
+    </section>
+
+    <section class="marquee-band" aria-label="Areas of work">
+      <div class="marquee-track">
+        <div class="marquee-set">
+          <span>PYTHON DEVELOPMENT</span><b>✦</b><span>RESPONSIBLE AI</span><b>✦</b><span>FULL-STACK PRODUCTS</span><b>✦</b><span>HUMAN-CENTERED SYSTEMS</span><b>✦</b>
+        </div>
+        <div class="marquee-set" aria-hidden="true">
+          <span>PYTHON DEVELOPMENT</span><b>✦</b><span>RESPONSIBLE AI</span><b>✦</b><span>FULL-STACK PRODUCTS</span><b>✦</b><span>HUMAN-CENTERED SYSTEMS</span><b>✦</b>
+        </div>
+      </div>
+    </section>
+
+    <section class="work section-shell" id="work" aria-labelledby="work-title">
+      <div class="section-heading reveal">
+        <p class="section-index">01 / SELECTED WORK</p>
+        <div>
+          <h2 id="work-title">Projects built to solve,<br>explain, and endure.</h2>
+          <p>Real repositories, honest constraints, and complete product thinking—from model behavior to the final interface.</p>
+        </div>
+      </div>
+
+      <div class="project-list">
+        {% for project in projects %}
+        <article class="project-card project-{{ project.accent }} reveal" data-tilt-card data-project-card>
+          <div class="project-number">{{ project.number }}</div>
+          <div class="project-body">
+            <p class="project-kicker">{{ project.kicker }}</p>
+            <h3>{{ project.name }}</h3>
+            <p class="project-description">{{ project.description }}</p>
+            <p class="project-proof"><span aria-hidden="true">✓</span>{{ project.proof }}</p>
+            <ul class="tag-list" aria-label="Technologies used">
+              {% for technology in project.technologies %}<li>{{ technology }}</li>{% endfor %}
+            </ul>
+          </div>
+          <div class="project-links">
+            <a href="{{ project.repository_url }}" target="_blank" rel="noreferrer" aria-label="View {{ project.name }} source code on GitHub">Source <span aria-hidden="true">↗</span></a>
+            {% if project.live_url %}<a href="{{ project.live_url }}" target="_blank" rel="noreferrer" aria-label="Open the live {{ project.name }} project">Live <span aria-hidden="true">↗</span></a>{% endif %}
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="about section-shell" id="about" aria-labelledby="about-title">
+      <div class="about-intro reveal">
+        <p class="section-index">02 / HOW I BUILD</p>
+        <h2 id="about-title">Curiosity starts it.<br><em>Rigor ships it.</em></h2>
+      </div>
+      <div class="about-copy reveal">
+        <p class="about-lede">I like projects where software must do more than look impressive—it must make sense under real questions.</p>
+        <p>My work moves across interfaces, APIs, data, machine learning, and validation. I’m especially interested in systems that help people understand complex information without hiding uncertainty behind the technology.</p>
+        <blockquote>“Build the ambitious version. Then make every claim earn its place.”</blockquote>
+      </div>
+
+    </section>
+
+    <section class="skills-section" id="skills" aria-labelledby="skills-title">
+      <div class="section-shell">
+        <div class="section-heading skills-heading reveal">
+          <p class="section-index">03 / TECHNICAL SKILLS</p>
+          <div>
+            <h2 id="skills-title">The tools behind<br>the outcomes.</h2>
+            <p>A practical stack shaped by building complete products—not a collection of buzzwords.</p>
+          </div>
+        </div>
+
+        <div class="skill-grid">
+        {% for group in skill_groups %}
+        <section class="skill-panel reveal">
+          <div class="skill-panel-head"><span>{{ group.number }}</span><h3>{{ group.title }}</h3></div>
+          <p>{{ group.summary }}</p>
+          <ul>{% for skill in group.skills %}<li><i aria-hidden="true"></i>{{ skill }}</li>{% endfor %}</ul>
+        </section>
+        {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <section class="python-lab" id="python" aria-labelledby="python-title">
+      <div class="section-shell python-layout">
+        <div class="python-copy reveal">
+          <p class="section-index">04 / UNDER THE HOOD</p>
+          <h2 id="python-title">This portfolio<br>actually runs on <span>Python.</span></h2>
+          <p>The page is rendered by Flask. The contact form is validated by Python and stored in SQLite. Press the button to call a live JSON endpoint from the same backend.</p>
+          <button class="button button-light" type="button" id="run-python">Run Python endpoint <span aria-hidden="true">▶</span></button>
+        </div>
+
+        <div class="terminal reveal" aria-live="polite">
+          <div class="terminal-bar"><span></span><span></span><span></span><p>portfolio — python</p></div>
+          <div class="terminal-body" id="terminal-output">
+            <p><b>$</b> curl /api/profile</p>
+            <p class="terminal-muted"># Ready. Click “Run Python endpoint”.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="principles section-shell" aria-labelledby="principles-title">
+      <div class="section-heading reveal">
+        <p class="section-index">05 / PRINCIPLES</p>
+        <div><h2 id="principles-title">What I bring<br>to every build.</h2></div>
+      </div>
+      <div class="principle-grid">
+        <article class="reveal"><span>01</span><h3>Think in systems</h3><p>I connect the frontend experience to the data, APIs, constraints, and operations behind it.</p></article>
+        <article class="reveal"><span>02</span><h3>Make truth visible</h3><p>I label synthetic data, model limits, and uncertainty instead of turning prototypes into inflated claims.</p></article>
+        <article class="reveal"><span>03</span><h3>Finish the loop</h3><p>I care about testing, error states, responsiveness, accessibility, and the last mile between code and a usable product.</p></article>
+      </div>
+    </section>
+
+    <section class="contact section-shell" id="contact" aria-labelledby="contact-title">
+      <div class="contact-copy reveal">
+        <p class="section-index">06 / GET IN TOUCH</p>
+        <h2 id="contact-title">Have a meaningful<br>problem to solve?</h2>
+        <p>{{ profile.availability }}</p>
+        <a class="email-link" href="mailto:{{ profile.email }}">{{ profile.email }} <span aria-hidden="true">↗</span></a>
+        <div class="social-links">
+          <a href="{{ profile.github_url }}" target="_blank" rel="noreferrer">GitHub</a>
+          {% if profile.linkedin_url %}<a href="{{ profile.linkedin_url }}" target="_blank" rel="noreferrer">LinkedIn</a>{% endif %}
+        </div>
+      </div>
+
+      <form class="contact-form reveal" id="contact-form" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="honeypot" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+        <div class="form-field">
+          <label for="name">Your name</label>
+          <input id="name" name="name" type="text" minlength="2" maxlength="80" autocomplete="name" required placeholder="What should I call you?">
+          <small class="field-error" data-error-for="name"></small>
+        </div>
+        <div class="form-field">
+          <label for="email">Email address</label>
+          <input id="email" name="email" type="email" maxlength="254" autocomplete="email" required placeholder="you@example.com">
+          <small class="field-error" data-error-for="email"></small>
+        </div>
+        <div class="form-field">
+          <label for="message">Tell me about the idea</label>
+          <textarea id="message" name="message" minlength="20" maxlength="1500" rows="5" required placeholder="A short note about your project, collaboration, or opportunity…"></textarea>
+          <small class="field-error" data-error-for="message"></small>
+        </div>
+        <button class="button button-primary form-submit" type="submit">Send message <span aria-hidden="true">↗</span></button>
+        <p class="form-status" id="form-status" role="status"></p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="section-shell">
+      <p>Designed & built by <strong>Divya Jain</strong>, powered by Python.</p>
+      <p>© {{ current_year }} <a href="#top">Back to top ↑</a></p>
+    </div>
+  </footer>
+</body>
+</html>
