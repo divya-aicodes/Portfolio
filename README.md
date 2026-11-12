@@ -8,7 +8,7 @@ The presentation includes three selected product projects, a categorized technic
 
 - Flask renders the portfolio and project data on the server.
 - `GET /api/profile` returns live JSON used by the interactive terminal.
-- `POST /api/contact` validates submissions, checks CSRF tokens, rate-limits requests, and stores messages in SQLite.
+- `POST /api/contact` validates submissions, checks CSRF tokens, rate-limits requests, and stores production messages in private Vercel Blob storage.
 - `GET /health` provides a small deployment health check.
 - Pytest covers rendering, API behavior, persistence, validation, and security headers.
 
@@ -56,7 +56,7 @@ python app.py
 4. Add a long random `SECRET_KEY` environment variable. Optionally add `LINKEDIN_URL`.
 5. Set `APP_ENV` to `production`, then deploy.
 
-Vercel Functions can only write temporary files. On Vercel, contact messages use `/tmp/portfolio.sqlite3` and are not durable across function instances or redeployments. Use a managed database or email provider before relying on the form for production enquiries.
+The production project uses a private Vercel Blob store named `portfolio-messages`. Vercel supplies its storage credentials automatically; do not copy those credentials into the repository.
 
 ## Tests
 
@@ -69,7 +69,8 @@ python -m pytest -q
 ```text
 Portfolio/
 ├── RUN_ME.bat                One-click Windows setup and launcher
-├── app.py                    Flask app, APIs, validation, SQLite, security headers
+├── app.py                    Flask app, APIs, validation, storage routing, security headers
+├── contact_storage.py        Private Vercel Blob message persistence
 ├── portfolio_data.py         Profile, projects, and technology content
 ├── templates/
 │   ├── index.html            Main server-rendered portfolio
@@ -84,7 +85,7 @@ Portfolio/
 
 ## Contact-message note
 
-Messages are stored locally in `instance/portfolio.sqlite3`; this is persistence for the assignment and a single-server deployment, not email delivery. For a multi-instance production deployment, move messages to a managed database and add a transactional email provider.
+Local messages are stored in `instance/portfolio.sqlite3`. Production messages are durable private JSON records in Vercel Blob. To view them, open the `portfolio` project in Vercel, select **Storage**, open **portfolio-messages**, and browse the `messages/` folder. Only authenticated members of the Vercel account can access the records.
 
 ## Content provenance
 

@@ -15,6 +15,7 @@ from typing import Any
 
 from flask import Flask, g, jsonify, render_template, request, session
 
+import contact_storage
 from portfolio_data import PROFILE, PROJECTS, SKILL_GROUPS
 
 
@@ -66,17 +67,20 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         SESSION_COOKIE_SECURE=os.environ.get("APP_ENV") == "production",
         MAX_CONTENT_LENGTH=32 * 1024,
         RATE_LIMIT_ENABLED=True,
+        CONTACT_STORAGE="blob" if os.environ.get("VERCEL") else "sqlite",
     )
 
     if test_config:
         app.config.update(test_config)
 
-    Path(app.config["DATABASE"]).parent.mkdir(parents=True, exist_ok=True)
+    if app.config["CONTACT_STORAGE"] == "sqlite":
+        Path(app.config["DATABASE"]).parent.mkdir(parents=True, exist_ok=True)
 
     app.teardown_appcontext(close_database)
 
-    with app.app_context():
-        init_database()
+    if app.config["CONTACT_STORAGE"] == "sqlite":
+        with app.app_context():
+            init_database()
 
     @app.get("/")
     def index():
@@ -143,17 +147,38 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         if errors:
             return jsonify(error="Please correct the highlighted fields.", fields=errors), 422
 
-        database = get_database()
-        database.execute(
-            "INSERT INTO messages (name, email, message, created_at) VALUES (?, ?, ?, ?)",
-            (name, email, message, datetime.now(UTC).isoformat()),
-        )
-        database.commit()
+        created_at = datetime.now(UTC)
+        if app.config["CONTACT_STORAGE"] == "blob":
+            try:
+                contact_storage.save_contact_message_to_blob(
+                    name=name,
+                    email=email,
+                    message=message,
+                    created_at=created_at,
+                )
+            except Exception:
+                app.logger.exception("Private contact-message storage failed.")
+                return (
+                    jsonify(
+                        error=(
+                            "The message could not be saved right now. "
+                            "Please email Divya directly."
+                        )
+                    ),
+                    503,
+                )
+        else:
+            database = get_database()
+            database.execute(
+                "INSERT INTO messages (name, email, message, created_at) VALUES (?, ?, ?, ?)",
+                (name, email, message, created_at.isoformat()),
+            )
+            database.commit()
 
         session["csrf_token"] = secrets.token_urlsafe(32)
         return (
             jsonify(
-                message="Message saved. Divya can review it from the portfolio database.",
+                message="Message sent successfully. Divya will get back to you soon.",
                 csrf_token=session["csrf_token"],
             ),
             201,

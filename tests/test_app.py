@@ -13,6 +13,7 @@ def application(tmp_path):
             "SECRET_KEY": "test-secret-key",
             "DATABASE": str(tmp_path / "test.sqlite3"),
             "RATE_LIMIT_ENABLED": False,
+            "CONTACT_STORAGE": "sqlite",
         }
     )
 
@@ -70,6 +71,65 @@ def test_contact_submission_is_persisted(application, client):
     with sqlite3.connect(application.config["DATABASE"]) as database:
         saved = database.execute("SELECT name, email FROM messages").fetchone()
     assert saved == ("Ada Lovelace", "ada@example.com")
+
+
+def test_contact_submission_uses_private_blob_storage(application, client, monkeypatch):
+    saved = {}
+
+    def fake_save(**message):
+        saved.update(message)
+
+    application.config["CONTACT_STORAGE"] = "blob"
+    monkeypatch.setattr(
+        "contact_storage.save_contact_message_to_blob",
+        fake_save,
+    )
+
+    response = client.post(
+        "/api/contact",
+        json={
+            "csrf_token": get_csrf_token(client),
+            "name": "Grace Hopper",
+            "email": "grace@example.com",
+            "message": "I would like to discuss a new software project.",
+            "website": "",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json["message"] == (
+        "Message sent successfully. Divya will get back to you soon."
+    )
+    assert saved["name"] == "Grace Hopper"
+    assert saved["email"] == "grace@example.com"
+
+
+def test_contact_reports_storage_failure(application, client, monkeypatch):
+    application.config["CONTACT_STORAGE"] = "blob"
+
+    def fail_to_save(**_message):
+        raise RuntimeError("storage unavailable")
+
+    monkeypatch.setattr(
+        "contact_storage.save_contact_message_to_blob",
+        fail_to_save,
+    )
+
+    response = client.post(
+        "/api/contact",
+        json={
+            "csrf_token": get_csrf_token(client),
+            "name": "Grace Hopper",
+            "email": "grace@example.com",
+            "message": "I would like to discuss a new software project.",
+            "website": "",
+        },
+    )
+
+    assert response.status_code == 503
+    assert response.json["error"] == (
+        "The message could not be saved right now. Please email Divya directly."
+    )
 
 
 def test_contact_rejects_invalid_input(client):
