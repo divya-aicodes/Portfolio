@@ -10,12 +10,12 @@ import time
 from collections import defaultdict, deque
 from datetime import UTC, datetime
 from pathlib import Path
-from tempfile import gettempdir
 from typing import Any
 
 from flask import Flask, g, jsonify, render_template, request, session
 
-import contact_storage
+import database_storage
+from notifications import send_contact_notification
 from portfolio_data import PROFILE, PROJECTS, SKILL_GROUPS
 
 
@@ -54,7 +54,7 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
     if configured_database:
         default_database = configured_database
     elif os.environ.get("VERCEL"):
-        default_database = str(Path(gettempdir()) / "portfolio.sqlite3")
+        default_database = ""
     else:
         default_database = str(Path(app.instance_path) / "portfolio.sqlite3")
 
@@ -67,20 +67,22 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
         SESSION_COOKIE_SECURE=os.environ.get("APP_ENV") == "production",
         MAX_CONTENT_LENGTH=32 * 1024,
         RATE_LIMIT_ENABLED=True,
-        CONTACT_STORAGE="blob" if os.environ.get("VERCEL") else "sqlite",
+        DATABASE_URL=os.environ.get("DATABASE_URL", "").strip(),
     )
 
     if test_config:
         app.config.update(test_config)
 
-    if app.config["CONTACT_STORAGE"] == "sqlite":
+    if not app.config["DATABASE_URL"] and not app.config["DATABASE"]:
+        raise RuntimeError("Set DATABASE_URL in production; local fallback is SQLite.")
+
+    if not app.config["DATABASE_URL"]:
         Path(app.config["DATABASE"]).parent.mkdir(parents=True, exist_ok=True)
 
     app.teardown_appcontext(close_database)
 
-    if app.config["CONTACT_STORAGE"] == "sqlite":
-        with app.app_context():
-            init_database()
+    with app.app_context():
+        init_database()
 
     @app.get("/")
     def index():
@@ -148,38 +150,33 @@ def create_app(test_config: dict[str, Any] | None = None) -> Flask:
             return jsonify(error="Please correct the highlighted fields.", fields=errors), 422
 
         created_at = datetime.now(UTC)
-        if app.config["CONTACT_STORAGE"] == "blob":
-            try:
-                contact_storage.save_contact_message_to_blob(
-                    name=name,
-                    email=email,
-                    message=message,
-                    created_at=created_at,
-                )
-            except Exception:
-                app.logger.exception("Private contact-message storage failed.")
-                return (
-                    jsonify(
-                        error=(
-                            "The message could not be saved right now. "
-                            "Please email Divya directly."
-                        )
-                    ),
-                    503,
-                )
-        else:
-            database = get_database()
-            database.execute(
-                "INSERT INTO messages (name, email, message, created_at) VALUES (?, ?, ?, ?)",
-                (name, email, message, created_at.isoformat()),
+        try:
+            database_storage.save_contact_message(
+                get_database(),
+                is_postgres=bool(app.config["DATABASE_URL"]),
+                name=name,
+                email=email,
+                message=message,
+                created_at=created_at,
             )
-            database.commit()
+        except Exception:
+            app.logger.exception("Contact-message database write failed.")
+            return jsonify(error="The message could not be saved right now. Please email Divya directly."), 503
+
+        notification_sent = send_contact_notification(
+            name=name,
+            email=email,
+            message=message,
+            created_at=created_at,
+            logger=app.logger,
+        )
 
         session["csrf_token"] = secrets.token_urlsafe(32)
         return (
             jsonify(
                 message="Message sent successfully. Divya will get back to you soon.",
                 csrf_token=session["csrf_token"],
+                notification_sent=notification_sent,
             ),
             201,
         )
@@ -227,11 +224,13 @@ def get_csrf_token() -> str:
 
 def get_database() -> sqlite3.Connection:
     if "database" not in g:
-        g.database = sqlite3.connect(
-            current_app_database_path(),
-            detect_types=sqlite3.PARSE_DECLTYPES,
-        )
-        g.database.row_factory = sqlite3.Row
+        from flask import current_app
+        if current_app.config["DATABASE_URL"]:
+            import psycopg
+            g.database = psycopg.connect(current_app.config["DATABASE_URL"])
+        else:
+            g.database = sqlite3.connect(current_app_database_path(), detect_types=sqlite3.PARSE_DECLTYPES)
+            g.database.row_factory = sqlite3.Row
     return g.database
 
 
@@ -249,8 +248,19 @@ def close_database(_error: BaseException | None = None) -> None:
 
 def init_database() -> None:
     database = get_database()
-    database.execute(
-        """
+    from flask import current_app
+    if current_app.config["DATABASE_URL"]:
+        database.execute("""
+        CREATE TABLE IF NOT EXISTS messages (
+            id BIGSERIAL PRIMARY KEY,
+            name VARCHAR(80) NOT NULL,
+            email VARCHAR(254) NOT NULL,
+            message VARCHAR(1500) NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL
+        )
+        """)
+    else:
+        database.execute("""
         CREATE TABLE IF NOT EXISTS messages (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL CHECK(length(name) BETWEEN 2 AND 80),
@@ -258,8 +268,7 @@ def init_database() -> None:
             message TEXT NOT NULL CHECK(length(message) BETWEEN 20 AND 1500),
             created_at TEXT NOT NULL
         )
-        """
-    )
+        """)
     database.commit()
 
 

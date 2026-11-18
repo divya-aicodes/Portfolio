@@ -1,6 +1,6 @@
 <img width="1029" height="632" alt="dark_mode" src="https://github.com/user-attachments/assets/403eb9a0-b980-413e-a12b-bdde2633c7ef" /># Divya Jain — Python Portfolio
 
-A production-minded personal portfolio built with Flask, semantic HTML, modern CSS, vanilla JavaScript, and SQLite. The project was created for a Python programming assignment while keeping the frontend polished enough to use as a real personal website.
+A production-minded personal portfolio built with Flask, semantic HTML, modern CSS, vanilla JavaScript, and SQL. The project was created for a Python programming assignment while keeping the frontend polished enough to use as a real personal website.
 
 The presentation includes three selected product projects, a categorized technical-skills matrix, a branded loading sequence, scroll reveals, animated metrics and marquee text, rotating focus copy, pointer-responsive depth effects, and a reduced-motion fallback.
 
@@ -8,7 +8,7 @@ The presentation includes three selected product projects, a categorized technic
 
 - Flask renders the portfolio and project data on the server.
 - `GET /api/profile` returns live JSON used by the interactive terminal.
-- `POST /api/contact` validates submissions, checks CSRF tokens, rate-limits requests, and stores production messages in private Vercel Blob storage.
+- `POST /api/contact` validates submissions, checks CSRF tokens, rate-limits requests, stores the message in SQL, and sends an optional email notification.
 - `GET /health` provides a small deployment health check.
 - Pytest covers rendering, API behavior, persistence, validation, and security headers.
 
@@ -39,12 +39,18 @@ Copy `.env.example` values into your shell or hosting provider. The application 
 | `LINKEDIN_URL` | Full LinkedIn profile URL. The LinkedIn link stays hidden when this is empty. |
 | `APP_ENV` | Set to `production` to enable secure session cookies behind HTTPS. |
 | `PORT` | Web server port. Defaults to `5000`. |
+| `DATABASE_URL` | Production PostgreSQL connection string. Required on Vercel. |
+| `NOTIFICATION_EMAIL_TO` | Inbox that receives new-message alerts. |
+| `SMTP_HOST`, `SMTP_PORT` | SMTP server settings, such as `smtp.gmail.com` and `587`. |
+| `SMTP_USERNAME`, `SMTP_PASSWORD` | SMTP credentials; keep them only in hosting environment variables. |
+| `SMTP_FROM` | Verified sender address for notifications. |
 
 PowerShell example:
 
 ```powershell
 $env:SECRET_KEY = "replace-with-a-long-random-value"
 $env:LINKEDIN_URL = "https://www.linkedin.com/in/your-profile/"
+$env:DATABASE_URL = "postgresql://..."
 python app.py
 ```
 
@@ -54,9 +60,10 @@ python app.py
 2. Open [vercel.com/new](https://vercel.com/new) and import the `Portfolio` repository.
 3. Keep the detected framework and build settings unchanged; Vercel detects the root `app.py` Flask application automatically.
 4. Add a long random `SECRET_KEY` environment variable. Optionally add `LINKEDIN_URL`.
-5. Set `APP_ENV` to `production`, then deploy.
+5. Create a Supabase or Neon PostgreSQL database and add its private `DATABASE_URL` to Vercel.
+6. Add the SMTP variables if you want email alerts, then set `APP_ENV` to `production` and deploy.
 
-The production project uses a private Vercel Blob store named `portfolio-messages`. Vercel supplies its storage credentials automatically; do not copy those credentials into the repository.
+The database is the source of truth. In Supabase, open **Table Editor → messages** to see every row and export CSV. In Neon, use the SQL editor or a database client. The repository also includes `export_messages.py` for a repeatable CSV export.
 
 ## Tests
 
@@ -69,8 +76,10 @@ python -m pytest -q
 ```text
 Portfolio/
 ├── RUN_ME.bat                One-click Windows setup and launcher
-├── app.py                    Flask app, APIs, validation, storage routing, security headers
-├── contact_storage.py        Private Vercel Blob message persistence
+├── app.py                    Flask app, APIs, validation, database routing, security headers
+├── database_storage.py       SQL message persistence
+├── notifications.py          SMTP email notifications
+├── export_messages.py        CSV export for the message table
 ├── portfolio_data.py         Profile, projects, and technology content
 ├── templates/
 │   ├── index.html            Main server-rendered portfolio
@@ -85,7 +94,13 @@ Portfolio/
 
 ## Contact-message note
 
-Local messages are stored in `instance/portfolio.sqlite3`. Production messages are durable private JSON records in Vercel Blob. To view them, open the `portfolio` project in Vercel, select **Storage**, open **portfolio-messages**, and browse the `messages/` folder. Only authenticated members of the Vercel account can access the records.
+Local messages are stored in `instance/portfolio.sqlite3`. Production messages are rows in the private PostgreSQL `messages` table, which makes them visible, queryable, and exportable. Email is only a notification; the database write remains the source of truth if SMTP is down.
+
+To export messages:
+
+```powershell
+python export_messages.py messages.csv
+```
 
 ## Content provenance
 
